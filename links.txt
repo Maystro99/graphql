@@ -1,0 +1,3 @@
+full data: https://learn.reboot01.com/api/graphql-engine/v1/graphql
+
+login Data: https://learn.reboot01.com/api/auth/signin
