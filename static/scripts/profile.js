@@ -77,6 +77,44 @@ const loadXP = async (userID) => {
   return data.transaction_aggregate.aggregate.sum.amount ?? 0;
 };
 
+const passAndFailProject = async () => {
+  const query = `
+    query {
+      passed_projects: result_aggregate(
+        where: {
+          grade: { _gt: 1 }
+          object: { type: { _eq: "project" } }
+        }
+      ) {
+        aggregate {
+          count
+        }
+      }
+
+      failed_projects: result_aggregate(
+        where: {
+          grade: { _gt: 0, _lt: 1 }
+          object: { type: { _eq: "project" } }
+        }
+      ) {
+        aggregate {
+          count
+        }
+      }
+    }
+  `;
+
+  const data = await gql(query);
+
+  console.log("Passed projects:", data.passed_projects.aggregate.count);
+  console.log("Failed projects:", data.failed_projects.aggregate.count);
+
+  return {
+    pass: data.passed_projects.aggregate.count,
+    fail: data.failed_projects.aggregate.count,
+  };
+};
+
 // const loadResults = async () => {
 //   const query = `
 //     query {
@@ -138,16 +176,19 @@ const init = async () => {
 
     const totalXP = await loadXP(userID);
     const displayXP = String(Math.floor(totalXP)).slice(0, 3);
-    // const results = await loadResults();
-
-    // const passed = results.filter((r) => r.grade === 1).length;
+    const passAndFail = await passAndFailProject();
+    console.log(passAndFail);
+    const pass = passAndFail?.pass ?? 0;
+    const fail = passAndFail?.fail ?? 0;
 
     infoEl.innerHTML = `
-      <h2>Profile Overview</h2>
-      <p><strong>Total XP:</strong> ${displayXP}KB</p>
-    `;
-
-    // statsEl.innerHTML = renderPassFail(results);
+  <h2>Profile Overview</h2>
+  <p><strong>Total XP:</strong> ${displayXP} KB</p>
+  <p>
+    <strong>Total Projects:</strong> ${pass + fail}<br>
+    Passed: ${pass} | Failed: ${fail}
+  </p>
+`;
   } catch (err) {
     console.error(err);
     infoEl.innerHTML = `<p>Error loading profile data.</p>`;
