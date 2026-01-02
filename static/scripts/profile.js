@@ -2,7 +2,7 @@ const FULLDATA_API = "https://learn.reboot01.com/api/graphql-engine/v1/graphql";
 
 const loginNameEl = document.getElementById("login-name");
 const infoEl = document.getElementById("info");
-// const statsEl = document.getElementById("stats");
+const statsEl = document.getElementById("stats");
 
 const gql = async (query) => {
   const token = localStorage.getItem("jwt");
@@ -43,7 +43,7 @@ const loadUser = async () => {
   `;
 
   const data = await gql(query);
-  loginNameEl.textContent = `Welcome ${data.user[0].login}`;
+  loginNameEl.textContent = data.user[0].login;
   console.log("user data:", data.user[0]);
   return data.user[0].id;
 };
@@ -223,26 +223,86 @@ const init = async () => {
     const doneMB = toMB(done);
     const receiveMB = toMB(receive);
 
-    const ratioValue = receive > 0 ? (done / receive).toFixed(1) : "N/A";
+    const ratioNumber = receive > 0 ? done / receive : null;
+    const ratioValue = ratioNumber !== null ? ratioNumber.toFixed(1) : "N/A";
+    const ratioClass =
+      ratioNumber === null
+        ? "ratio-unknown"
+        : ratioNumber < 0.8
+        ? "ratio-low"
+        : ratioNumber < 1.0
+        ? "ratio-mid"
+        : "ratio-high";
+    const ratioWidth =
+      ratioNumber === null
+        ? 30
+        : ratioNumber < 0.8
+        ? 40
+        : ratioNumber < 1.0
+        ? 70
+        : 100;
+    const ratioMessage =
+      ratioNumber === null
+        ? "No ratio yet"
+        : ratioNumber < 0.8
+        ? "Careful buddy!"
+        : ratioNumber < 1.0
+        ? "Not Enough"
+        : "Good";
 
     infoEl.innerHTML = `
-  <h2>Profile Overview</h2>
-  <p><strong>Total XP:</strong> ${displayXP} KB</p>
-  <p>
-    <strong>Total Projects:</strong> ${pass + fail}<br>
-    Passed: ${pass} | Failed: ${fail}
-  </p>
-  <p><strong>Done</strong></p>
-  <p>${doneMB} MB</p>
+  <div class="card-header">
+    <div>
+      <p class="eyebrow">Profile</p>
+      <h2>Overview</h2>
+    </div>
+    <div class="badge">ID ${userID}</div>
+  </div>
+  <div class="stat-grid">
+    <div class="stat">
+      <p class="stat-label">Total XP</p>
+      <p class="stat-value">${displayXP} KB</p>
+    </div>
+    <div class="stat">
+      <p class="stat-label">Projects</p>
+      <p class="stat-value">${pass + fail}</p>
+      <p class="stat-meta">${pass} passed · ${fail} failed</p>
+    </div>
+    <div class="stat">
+      <p class="stat-label">Audit Ratio</p>
+      <p class="stat-value">${ratioValue}</p>
+      <p class="stat-meta">Done vs received</p>
+    </div>
+  </div>
+`;
 
-  <p><strong>Received</strong></p>
-  <p>${receiveMB} MB</p>
-
-  <p>${ratioValue}</p>
+    statsEl.innerHTML = `
+  <div class="card-header">
+    <div>
+      <p class="eyebrow">Audits</p>
+      <h2>Flow</h2>
+    </div>
+    <div class="badge">Ratio ${ratioValue}</div>
+  </div>
+  <div class="split">
+    <div class="stat">
+      <p class="stat-label">Done</p>
+      <p class="stat-value">${doneMB} MB</p>
+    </div>
+    <div class="stat">
+      <p class="stat-label">Received</p>
+      <p class="stat-value">${receiveMB} MB</p>
+    </div>
+  </div>
+  <div class="ratio-bar ${ratioClass}">
+    <div class="ratio-fill" style="width: ${ratioWidth}%;"></div>
+  </div>
+  <p class="stat-meta">${ratioMessage}</p>
 `;
   } catch (err) {
     console.error(err);
     infoEl.innerHTML = `<p>Error loading profile data.</p>`;
+    statsEl.innerHTML = "";
   }
 };
 

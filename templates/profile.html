@@ -7,13 +7,35 @@
   </head>
   <body>
     <header class="topbar">
-      <h1 id="login-name"></h1>
-      <button onclick="logout()">Logout</button>
+      <div class="brand">
+        <span class="brand-mark">GRAPHQL</span>
+        <span class="brand-sub">Profile Hub</span>
+      </div>
+      <div class="user-actions">
+        <div class="user-chip">
+          <span class="user-dot"></span>
+          <span id="login-name">Loading...</span>
+        </div>
+        <button class="ghost" onclick="logout()">Logout</button>
+      </div>
     </header>
 
     <main class="dashboard">
-      <section class="card" id="info"></section>
-      <section class="card" id="stats"></section>
+      <section class="card intro">
+        <p class="eyebrow">Welcome back</p>
+        <h2 class="hero-title">Your learning cockpit</h2>
+        <p class="lead">
+          Track XP, project outcomes, and audit flow with a clearer, calmer
+          snapshot of your progress.
+        </p>
+        <div class="chip-row">
+          <span class="chip">XP Growth</span>
+          <span class="chip">Project Health</span>
+          <span class="chip">Audit Balance</span>
+        </div>
+      </section>
+      <section class="card overview" id="info"></section>
+      <section class="card metrics" id="stats"></section>
     </main>
 
     <script src="../static/scripts/auth.js"></script>
