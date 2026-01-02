@@ -115,6 +115,40 @@ const passAndFailProject = async () => {
   };
 };
 
+const auditRatio = async () => {
+  const query = `
+    query AuditDoneValue {
+      Done: transaction_aggregate(
+        where: { type: { _eq: "up" } }
+      ) {
+        aggregate {
+          sum {
+            amount
+          }
+        }
+      }
+      Receive: transaction_aggregate(
+        where: { type: { _eq: "down" } }
+      ) {
+        aggregate {
+          sum {
+            amount
+          }
+        }
+      }
+    }
+  `;
+
+  const data = await gql(query);
+  console.log("Done:", data.Done.aggregate.sum.amount);
+  console.log("Recive:", data.Receive.aggregate.sum.amount);
+
+  return {
+    done: data?.Done?.aggregate?.sum?.amount ?? 0,
+    receive: data?.Receive?.aggregate?.sum?.amount ?? 0,
+  };
+};
+
 // const loadResults = async () => {
 //   const query = `
 //     query {
@@ -169,6 +203,7 @@ const passAndFailProject = async () => {
 //     </svg>
 //   `;
 // };
+const toMB = (value) => (Math.floor(value / 10000) / 100).toFixed(2);
 
 const init = async () => {
   try {
@@ -180,6 +215,15 @@ const init = async () => {
     console.log(passAndFail);
     const pass = passAndFail?.pass ?? 0;
     const fail = passAndFail?.fail ?? 0;
+    const ratio = await auditRatio();
+
+    const done = ratio?.done ?? 0;
+    const receive = ratio?.receive ?? 0;
+
+    const doneMB = toMB(done);
+    const receiveMB = toMB(receive);
+
+    const ratioValue = receive > 0 ? (done / receive).toFixed(1) : "N/A";
 
     infoEl.innerHTML = `
   <h2>Profile Overview</h2>
@@ -188,6 +232,13 @@ const init = async () => {
     <strong>Total Projects:</strong> ${pass + fail}<br>
     Passed: ${pass} | Failed: ${fail}
   </p>
+  <p><strong>Done</strong></p>
+  <p>${doneMB} MB</p>
+
+  <p><strong>Received</strong></p>
+  <p>${receiveMB} MB</p>
+
+  <p>${ratioValue}</p>
 `;
   } catch (err) {
     console.error(err);
