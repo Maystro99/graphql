@@ -271,7 +271,6 @@ const init = async () => {
     <div class="stat">
       <p class="stat-label">Audit Ratio</p>
       <p class="stat-value">${ratioValue}</p>
-      <p class="stat-meta">Done vs received</p>
     </div>
   </div>
 `;
@@ -280,7 +279,7 @@ const init = async () => {
   <div class="card-header">
     <div>
       <p class="eyebrow">Audits</p>
-      <h2>Flow</h2>
+      <h2>Audit ratio</h2>
     </div>
     <div class="badge">Ratio ${ratioValue}</div>
   </div>
