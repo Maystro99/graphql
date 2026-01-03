@@ -398,7 +398,15 @@ button:hover {
 }
 
 .audit-chart .flow-chart {
-  height: 20px;
+  height: 120px;
+}
+
+.audit-chart {
+  padding: 22px;
+}
+
+.audit-chart .card-header {
+  margin-bottom: 12px;
 }
 
 .donut-track {

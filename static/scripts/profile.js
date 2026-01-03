@@ -464,9 +464,11 @@ const init = async () => {
 
     if (auditChartEl) {
       const totalAudit = done + receive;
-      const barMax = 220;
+      const availableWidth = auditChartEl.clientWidth - 120;
+      const barMax = Math.max(200, Math.min(360, availableWidth || 0)) || 220;
       const doneWidth = totalAudit ? (done / totalAudit) * barMax : 0;
       const receiveWidth = totalAudit ? (receive / totalAudit) * barMax : 0;
+      const chartWidth = 70 + barMax + 50;
 
       auditChartEl.innerHTML = `
   <div class="card-header">
@@ -476,7 +478,7 @@ const init = async () => {
     </div>
     <div class="badge">${ratioValue}</div>
   </div>
-  <svg class="flow-chart" viewBox="0 0 300 120" role="img" aria-label="Audit flow bar chart">
+  <svg class="flow-chart" viewBox="0 0 ${chartWidth} 120" role="img" aria-label="Audit flow bar chart">
     <text class="flow-label" x="0" y="24">Done</text>
     <rect class="flow-track" x="70" y="12" width="${barMax}" height="14" rx="7"></rect>
     <rect class="flow-done" x="70" y="12" width="${doneWidth}" height="14" rx="7"></rect>
