@@ -406,17 +406,38 @@ button:hover {
 }
 
 .audit-chart {
-  padding: 22px;
+  padding: 18px 20px;
   height: 145px;
 }
 
 .audit-chart .card-header {
-  margin-bottom: 6px;
+  margin-bottom: 10px;
   align-items: flex-start;
 }
 
 .audit-chart .flow-chart {
-  height: 70px;
+  height: 88px;
+  margin-top: -30px;
+  margin-left: 40px;
+}
+
+.audit-chart .eyebrow {
+  font-size: 11px;
+  letter-spacing: 2.4px;
+  color: rgba(244, 188, 76, 0.8);
+}
+
+.audit-chart h2 {
+  font-size: 16px;
+  letter-spacing: 0.2px;
+}
+
+.audit-chart .badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 11px;
 }
 
 .donut-track {
@@ -495,13 +516,16 @@ button:hover {
 }
 
 .flow-label {
-  fill: var(--muted);
+  fill: rgba(226, 232, 240, 0.7);
   font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .flow-value {
   fill: var(--text);
   font-size: 12px;
+  font-weight: 600;
 }
 
 .stat-label {

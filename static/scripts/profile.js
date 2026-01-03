@@ -469,6 +469,10 @@ const init = async () => {
       const doneWidth = totalAudit ? (done / totalAudit) * barMax : 0;
       const receiveWidth = totalAudit ? (receive / totalAudit) * barMax : 0;
       const chartWidth = 70 + barMax + 50;
+      const chartHeight = 90;
+      const barHeight = 14;
+      const doneY = 14;
+      const receiveY = 50;
 
       auditChartEl.innerHTML = `
   <div class="card-header">
@@ -478,15 +482,19 @@ const init = async () => {
     </div>
     <div class="badge">${ratioValue}</div>
   </div>
-  <svg class="flow-chart" viewBox="0 0 ${chartWidth} 120" role="img" aria-label="Audit flow bar chart">
-    <text class="flow-label" x="0" y="24">Done</text>
-    <rect class="flow-track" x="70" y="12" width="${barMax}" height="14" rx="7"></rect>
-    <rect class="flow-done" x="70" y="12" width="${doneWidth}" height="14" rx="7"></rect>
-    <text class="flow-value" x="${70 + barMax + 8}" y="24">${doneMB}</text>
-    <text class="flow-label" x="0" y="70">Received</text>
-    <rect class="flow-track" x="70" y="58" width="${barMax}" height="14" rx="7"></rect>
-    <rect class="flow-receive" x="70" y="58" width="${receiveWidth}" height="14" rx="7"></rect>
-    <text class="flow-value" x="${70 + barMax + 8}" y="70">${receiveMB}</text>
+  <svg class="flow-chart" viewBox="0 0 ${chartWidth} ${chartHeight}" role="img" aria-label="Audit flow bar chart">
+    <text class="flow-label" x="0" y="${doneY + barHeight - 2}">Done</text>
+    <rect class="flow-track" x="70" y="${doneY}" width="${barMax}" height="${barHeight}" rx="7"></rect>
+    <rect class="flow-done" x="70" y="${doneY}" width="${doneWidth}" height="${barHeight}" rx="7"></rect>
+    <text class="flow-value" x="${70 + barMax + 8}" y="${
+        doneY + barHeight - 2
+      }">${doneMB}</text>
+    <text class="flow-label" x="0" y="${receiveY + barHeight - 2}">Received</text>
+    <rect class="flow-track" x="70" y="${receiveY}" width="${barMax}" height="${barHeight}" rx="7"></rect>
+    <rect class="flow-receive" x="70" y="${receiveY}" width="${receiveWidth}" height="${barHeight}" rx="7"></rect>
+    <text class="flow-value" x="${70 + barMax + 8}" y="${
+        receiveY + barHeight - 2
+      }">${receiveMB}</text>
   </svg>
 `;
     }
