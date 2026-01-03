@@ -279,29 +279,31 @@ button:hover {
   gap: 14px;
 }
 
-.skills-chart {
+.dashboard-charts {
   position: absolute;
   top: 0;
   left: calc(100% + 24px);
-  width: var(--skills-column-width);
+  width: calc(var(--skills-column-width) + 24px + var(--side-column-width));
+  display: grid;
+  grid-template-columns: var(--skills-column-width) var(--side-column-width);
+  gap: 28px;
+  align-items: stretch;
   z-index: 2;
 }
 
-.dashboard-side {
-  position: absolute;
-  top: 0;
-  left: calc(100% + 24px + var(--skills-column-width) + 24px);
-  width: var(--side-column-width);
-  display: grid;
-  gap: 28px;
-  z-index: 2;
+.dashboard-charts .card {
+  height: 100%;
+}
+
+.dashboard-charts .audit-chart {
+  grid-column: 1 / -1;
 }
 
 @media (max-width: 1200px) {
-  .skills-chart,
-  .dashboard-side {
+  .dashboard-charts {
     position: static;
     width: auto;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   }
 }
 
