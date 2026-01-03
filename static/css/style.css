@@ -401,6 +401,48 @@ button:hover {
   display: block;
 }
 
+.xp-chart {
+  grid-column: 1 / -1;
+}
+
+.xp-chart .xp-graph {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.xp-chart .xp-frame {
+  fill: rgba(255, 255, 255, 0.03);
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+}
+
+.xp-chart .xp-line {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 10px rgba(61, 214, 208, 0.35));
+}
+
+.xp-chart .xp-dot {
+  fill: var(--primary);
+  stroke: rgba(7, 17, 31, 0.9);
+  stroke-width: 2;
+}
+
+.xp-chart .xp-label {
+  fill: var(--muted);
+  font-size: 11px;
+}
+
+.xp-chart .xp-total {
+  fill: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .audit-chart .flow-chart {
   height: 120px;
 }

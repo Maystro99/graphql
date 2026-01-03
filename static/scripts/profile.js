@@ -77,6 +77,121 @@ const loadXP = async () => {
   return data.transaction_aggregate.aggregate.sum.amount ?? 0;
 };
 
+const loadXPHistory = async () => {
+  const query = `
+    query {
+      transaction(
+        where: {
+          type: { _eq: "xp" }
+          path: { _like: "%/bh-module/%" }
+          _or: [
+            { path: { _nlike: "%/piscine%" } }
+            { path: { _eq: "/bahrain/bh-module/piscine-js" } }
+            { path: { _eq: "/bahrain/bh-module/piscine-rust" } }
+          ]
+        }
+        order_by: { createdAt: asc }
+      ) {
+        amount
+        createdAt
+      }
+    }
+  `;
+
+  const data = await gql(query);
+  return data.transaction || [];
+};
+
+const formatShortDate = (value) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+  });
+};
+
+const renderXPChart = (container, rows) => {
+  if (!container) return;
+  if (!rows || rows.length === 0) {
+    container.innerHTML = `
+  <div class="card-header">
+    <div>
+      <p class="eyebrow">XP</p>
+      <h2>Learning curve</h2>
+    </div>
+    <div class="badge">No data</div>
+  </div>
+  <p class="stat-meta">No XP activity yet.</p>
+`;
+    return;
+  }
+
+  const sortedRows = [...rows].sort(
+    (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+  );
+  let running = 0;
+  const series = sortedRows.map((row) => {
+    running += row.amount || 0;
+    return {
+      time: new Date(row.createdAt).getTime(),
+      value: running,
+    };
+  });
+
+  const startTime = series[0]?.time ?? 0;
+  const endTime = series[series.length - 1]?.time ?? startTime + 1;
+  const timeSpan = Math.max(endTime - startTime, 1);
+  const maxValue = Math.max(series[series.length - 1]?.value ?? 0, 1);
+
+  const width = 680;
+  const height = 260;
+  const margin = { top: 20, right: 36, bottom: 34, left: 40 };
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
+
+  const toX = (time) =>
+    margin.left + ((time - startTime) / timeSpan) * plotWidth;
+  const toY = (value) =>
+    margin.top + plotHeight - (value / maxValue) * plotHeight;
+
+  const points = [];
+  let prev = series[0];
+  points.push(`${toX(prev.time)},${toY(prev.value)}`);
+  for (let i = 1; i < series.length; i += 1) {
+    const current = series[i];
+    points.push(`${toX(current.time)},${toY(prev.value)}`);
+    points.push(`${toX(current.time)},${toY(current.value)}`);
+    prev = current;
+  }
+
+  const startLabel = formatShortDate(sortedRows[0]?.createdAt);
+  const endLabel = formatShortDate(sortedRows[sortedRows.length - 1]?.createdAt);
+  const totalLabel = convertBytes(series[series.length - 1]?.value ?? 0);
+  const lastPoint = points[points.length - 1]?.split(",") || [];
+  const lastX = Number(lastPoint[0]) || margin.left;
+  const lastY = Number(lastPoint[1]) || margin.top + plotHeight;
+
+  container.innerHTML = `
+  <div class="card-header">
+    <div>
+      <p class="eyebrow">XP</p>
+      <h2>Learning curve</h2>
+    </div>
+    <div class="badge">${totalLabel} total</div>
+  </div>
+  <svg class="xp-graph" viewBox="0 0 ${width} ${height}" role="img" aria-label="XP over time chart">
+    <rect class="xp-frame" x="${margin.left}" y="${margin.top}" width="${plotWidth}" height="${plotHeight}" rx="16"></rect>
+    <path class="xp-line" d="M ${points.join(" L ")}"></path>
+    <circle class="xp-dot" cx="${lastX}" cy="${lastY}" r="4"></circle>
+    <text class="xp-label" x="${margin.left}" y="${height - 12}">${startLabel}</text>
+    <text class="xp-label" x="${width - margin.right}" y="${height - 12}" text-anchor="end">${endLabel}</text>
+    <text class="xp-total" x="${Math.min(lastX + 8, width - margin.right)}" y="${Math.max(lastY - 10, margin.top + 12)}">${totalLabel}</text>
+  </svg>
+`;
+};
+
 const passAndFailProject = async () => {
   const query = `
     query {
@@ -241,6 +356,7 @@ const init = async () => {
     const userID = await loadUser();
 
     const totalXP = await loadXP();
+    const xpHistory = await loadXPHistory();
     const displayXP = convertBytes(totalXP);
     const passAndFail = await passAndFailProject();
     console.log(passAndFail);
@@ -288,6 +404,7 @@ const init = async () => {
     const skillsChartEl = document.getElementById("skills-chart");
     const projectChartEl = document.getElementById("project-chart");
     const auditChartEl = document.getElementById("audit-chart");
+    const xpChartEl = document.getElementById("xp-chart");
 
     infoEl.innerHTML = `
   <div class="card-header">
@@ -337,6 +454,8 @@ const init = async () => {
   </div>
   <p class="stat-meta">${ratioMessage}</p>
 `;
+
+    renderXPChart(xpChartEl, xpHistory);
 
     if (skillsEl) {
       const skillEntries = Object.entries(skill || {});
