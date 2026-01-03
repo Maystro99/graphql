@@ -48,12 +48,11 @@ const loadUser = async () => {
   return data.user[0].id;
 };
 
-const loadXP = async (userID) => {
+const loadXP = async () => {
   const query = `
     query {
       transaction_aggregate(
         where: {
-          userId: { _eq: ${userID} }
           type: { _eq: "xp" }
           path: { _like: "%/bh-module/%" }
           _or: [
@@ -79,29 +78,30 @@ const loadXP = async (userID) => {
 
 const passAndFailProject = async () => {
   const query = `
-    query {
-      passed_projects: result_aggregate(
-        where: {
-          grade: { _gt: 1 }
-          object: { type: { _eq: "project" } }
-        }
-      ) {
-        aggregate {
-          count
-        }
-      }
-
-      failed_projects: result_aggregate(
-        where: {
-          grade: { _gt: 0, _lt: 1 }
-          object: { type: { _eq: "project" } }
-        }
-      ) {
-        aggregate {
-          count
-        }
-      }
+query {
+  passed_projects: result_aggregate(
+    where: {
+      grade: { _gt: 1 }
+      object: { type: { _eq: "project" } }
     }
+  ) {
+    aggregate {
+      count(distinct: true, columns: objectId)
+    }
+  }
+
+  failed_projects: result_aggregate(
+    where: {
+      grade: { _gt: -1, _lt: 1 }
+      object: { type: { _eq: "project" } }
+    }
+  ) {
+    aggregate {
+      count(distinct: true, columns: objectId)
+    }
+  }
+}
+
   `;
 
   const data = await gql(query);
@@ -149,68 +149,48 @@ const auditRatio = async () => {
   };
 };
 
-// const loadResults = async () => {
-//   const query = `
-//     query {
-//       result {
-//         grade
-//       }
-//     }
-//   `;
+const mySkills = async () => {
+  const query = `
+    query {
+      transaction(where: { type: { _like: "skill_%" } }) {
+        type
+      }
+    }
+  `;
 
-//   return (await gql(query)).result;
-// };
+  const data = await gql(query);
 
-// const renderXPGraph = async (xp) => {
-//   let cumulative = 0;
-//   const values = xp.map((t) => (cumulative += t.amount));
-//   const maxXP = Math.max(...values);
+  const rows = data.transaction;
 
-//   const width = 700;
-//   const height = 260;
+  console.log("skills:", rows);
 
-//   const points = values
-//     .map((v, i) => {
-//       const x = (i / (values.length - 1)) * width;
-//       const y = height - (v / maxXP) * height;
-//       return `${x},${y}`;
-//     })
-//     .join(" ");
+  const skillCounts = {};
 
-//   return `
-//     <h2>XP Progress Over Time</h2>
-//     <svg viewBox="0 0 ${width} ${height}">
-//       <polyline points="${points}" />
-//     </svg>
-//   `;
-// };
+  rows.forEach((row) => {
+    skillCounts[row.type] = (skillCounts[row.type] || 0) + 1;
+  });
 
-// const renderPassFail =  (results) => {
-//   const passed = results.filter((r) => r.grade === 1).length;
-//   const failed = results.length - passed;
+  // console.log("counted Skills:", skillCounts);
 
-//   const total = passed + failed;
-//   const passPercent = Math.round((passed / total) * 100);
+  return skillCounts;
+};
 
-//   return `
-//     <h2>Pass / Fail Ratio</h2>
-//     <p>${passed} passed · ${failed} failed</p>
-//     <svg viewBox="0 0 400 20">
-//       <rect width="${passPercent * 4}" height="20" class="pass" />
-//       <rect x="${passPercent * 4}" width="${
-//     400 - passPercent * 4
-//   }" height="20" class="fail" />
-//     </svg>
-//   `;
-// };
-const toMB = (value) => (Math.floor(value / 10000) / 100).toFixed(2);
+const convertor = (value) => {
+  if (value >= 1000000) {
+    return (
+      String((Math.floor((value / 1_000_000) * 100) / 100).toFixed(2)) + " MB"
+    );
+  }
+  // show kB
+  return String((Math.floor((value / 1_000) * 100) / 100).toFixed(2)) + " KB";
+};
 
 const init = async () => {
   try {
     const userID = await loadUser();
 
     const totalXP = await loadXP(userID);
-    const displayXP = String(Math.floor(totalXP)).slice(0, 3);
+    const displayXP = String(Math.round(totalXP / 1000)).slice(0, 3);
     const passAndFail = await passAndFailProject();
     console.log(passAndFail);
     const pass = passAndFail?.pass ?? 0;
@@ -220,8 +200,8 @@ const init = async () => {
     const done = ratio?.done ?? 0;
     const receive = ratio?.receive ?? 0;
 
-    const doneMB = toMB(done);
-    const receiveMB = toMB(receive);
+    const doneMB = convertor(done);
+    const receiveMB = convertor(receive);
 
     const ratioNumber = receive > 0 ? done / receive : null;
     const ratioValue = ratioNumber !== null ? ratioNumber.toFixed(1) : "N/A";
@@ -230,7 +210,7 @@ const init = async () => {
         ? "ratio-unknown"
         : ratioNumber < 0.8
         ? "ratio-low"
-        : ratioNumber < 1.0
+        : ratioNumber < 1.2
         ? "ratio-mid"
         : "ratio-high";
     const ratioWidth =
@@ -238,7 +218,7 @@ const init = async () => {
         ? 30
         : ratioNumber < 0.8
         ? 40
-        : ratioNumber < 1.0
+        : ratioNumber < 1.2
         ? 70
         : 100;
     const ratioMessage =
@@ -246,9 +226,12 @@ const init = async () => {
         ? "No ratio yet"
         : ratioNumber < 0.8
         ? "Careful buddy!"
-        : ratioNumber < 1.0
-        ? "Not Enough"
+        : ratioNumber < 1.2
+        ? "Make more audits!"
         : "Good";
+
+    const skill = await mySkills();
+    console.log("skillInit:", skill);
 
     infoEl.innerHTML = `
   <div class="card-header">
@@ -286,11 +269,11 @@ const init = async () => {
   <div class="split">
     <div class="stat">
       <p class="stat-label">Done</p>
-      <p class="stat-value">${doneMB} MB</p>
+      <p class="stat-value">${doneMB}</p>
     </div>
     <div class="stat">
       <p class="stat-label">Received</p>
-      <p class="stat-value">${receiveMB} MB</p>
+      <p class="stat-value">${receiveMB}</p>
     </div>
   </div>
   <div class="ratio-bar ${ratioClass}">
