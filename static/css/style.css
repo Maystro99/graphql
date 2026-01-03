@@ -277,6 +277,14 @@ button:hover {
   gap: 14px;
 }
 
+.skills-chart {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 24px);
+  width: min(420px, 40vw);
+  z-index: 2;
+}
+
 .hero-title {
   font-size: 28px;
   letter-spacing: -0.4px;
@@ -337,6 +345,30 @@ button:hover {
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.02);
+}
+
+.skills-chart .skills-bars {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.skills-chart .bar-track {
+  fill: rgba(255, 255, 255, 0.08);
+}
+
+.skills-chart .bar-fill {
+  fill: var(--primary);
+}
+
+.skills-chart .chart-label {
+  fill: var(--muted);
+  font-size: 12px;
+}
+
+.skills-chart .chart-count {
+  fill: var(--secondary);
+  font-size: 12px;
 }
 
 .stat-label {

@@ -285,6 +285,7 @@ const init = async () => {
     const skill = await mySkills();
     console.log("skillInit:", skill);
     const skillsEl = document.getElementById("skills");
+    const skillsChartEl = document.getElementById("skills-chart");
 
     infoEl.innerHTML = `
   <div class="card-header">
@@ -364,6 +365,61 @@ const init = async () => {
     ${skillsMarkup || `<p class="stat-meta">No skills yet.</p>`}
   </div>
 `;
+    }
+
+    if (skillsChartEl) {
+      const chartEntries = Object.entries(skill || {}).sort(
+        ([, countA], [, countB]) => countB - countA
+      );
+      if (!chartEntries.length) {
+        skillsChartEl.innerHTML = `
+  <div class="card-header">
+    <div>
+      <p class="eyebrow">Skills</p>
+      <h2>All skills</h2>
+    </div>
+    <div class="badge">0 total</div>
+  </div>
+  <p class="stat-meta">No skills yet.</p>
+`;
+      } else {
+        const maxCount = Math.max(...chartEntries.map(([, count]) => count));
+        const barHeight = 16;
+        const barGap = 12;
+        const labelWidth = 120;
+        const barMaxWidth = 220;
+        const chartHeight = chartEntries.length * (barHeight + barGap) + 8;
+        const chartWidth = labelWidth + barMaxWidth + 40;
+        const bars = chartEntries
+          .map(([name, count], index) => {
+            const label = name.replace(/^skill_/, "").replace(/_/g, " ");
+            const barWidth =
+              maxCount === 0 ? 0 : Math.round((count / maxCount) * barMaxWidth);
+            const y = index * (barHeight + barGap) + 4;
+            return `
+    <text class="chart-label" x="0" y="${y + barHeight - 2}">${label}</text>
+    <rect class="bar-track" x="${labelWidth}" y="${y}" width="${barMaxWidth}" height="${barHeight}" rx="8" />
+    <rect class="bar-fill" x="${labelWidth}" y="${y}" width="${barWidth}" height="${barHeight}" rx="8" />
+    <text class="chart-count" x="${
+      labelWidth + barMaxWidth + 8
+    }" y="${y + barHeight - 2}">${count}</text>
+  `;
+          })
+          .join("");
+
+        skillsChartEl.innerHTML = `
+  <div class="card-header">
+    <div>
+      <p class="eyebrow">Skills</p>
+      <h2>All skills</h2>
+    </div>
+    <div class="badge">${chartEntries.length} total</div>
+  </div>
+  <svg class="skills-bars" viewBox="0 0 ${chartWidth} ${chartHeight}" role="img" aria-label="Skills bar chart">
+    ${bars}
+  </svg>
+`;
+      }
     }
   } catch (err) {
     console.error(err);
