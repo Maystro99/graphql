@@ -249,6 +249,8 @@ button:hover {
   gap: 28px;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   position: relative;
+  --skills-column-width: min(420px, 40vw);
+  --side-column-width: min(360px, 34vw);
   z-index: 1;
 }
 
@@ -281,8 +283,26 @@ button:hover {
   position: absolute;
   top: 0;
   left: calc(100% + 24px);
-  width: min(420px, 40vw);
+  width: var(--skills-column-width);
   z-index: 2;
+}
+
+.dashboard-side {
+  position: absolute;
+  top: 0;
+  left: calc(100% + 24px + var(--skills-column-width) + 24px);
+  width: var(--side-column-width);
+  display: grid;
+  gap: 28px;
+  z-index: 2;
+}
+
+@media (max-width: 1200px) {
+  .skills-chart,
+  .dashboard-side {
+    position: static;
+    width: auto;
+  }
 }
 
 .hero-title {
@@ -368,6 +388,98 @@ button:hover {
 
 .skills-chart .chart-count {
   fill: var(--secondary);
+  font-size: 12px;
+}
+
+.project-chart .donut-chart,
+.audit-chart .flow-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.donut-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 14;
+}
+
+.donut-pass {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 14;
+  stroke-linecap: round;
+}
+
+.donut-fail {
+  fill: none;
+  stroke: var(--danger);
+  stroke-width: 14;
+  stroke-linecap: round;
+}
+
+.donut-total {
+  fill: var(--text);
+  font-size: 26px;
+  font-weight: 600;
+  text-anchor: middle;
+}
+
+.donut-sub {
+  fill: var(--muted);
+  font-size: 12px;
+  text-anchor: middle;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-swatch.pass {
+  background: var(--primary);
+}
+
+.legend-swatch.fail {
+  background: var(--danger);
+}
+
+.flow-track {
+  fill: rgba(255, 255, 255, 0.1);
+}
+
+.flow-done {
+  fill: var(--primary);
+}
+
+.flow-receive {
+  fill: var(--secondary);
+}
+
+.flow-label {
+  fill: var(--muted);
+  font-size: 12px;
+}
+
+.flow-value {
+  fill: var(--text);
   font-size: 12px;
 }
 

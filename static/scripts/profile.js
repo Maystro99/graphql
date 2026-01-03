@@ -286,6 +286,8 @@ const init = async () => {
     console.log("skillInit:", skill);
     const skillsEl = document.getElementById("skills");
     const skillsChartEl = document.getElementById("skills-chart");
+    const projectChartEl = document.getElementById("project-chart");
+    const auditChartEl = document.getElementById("audit-chart");
 
     infoEl.innerHTML = `
   <div class="card-header">
@@ -420,6 +422,71 @@ const init = async () => {
   </svg>
 `;
       }
+    }
+
+    if (projectChartEl) {
+      const totalProjects = toatl;
+      const passProjects = pass;
+      const failProjects = fail;
+      const radius = 52;
+      const circumference = 2 * Math.PI * radius;
+      const passRatio = totalProjects ? passProjects / totalProjects : 0;
+      const failRatio = totalProjects ? failProjects / totalProjects : 0;
+      const passLength = Math.round(circumference * passRatio);
+      const failLength = Math.round(circumference * failRatio);
+
+      projectChartEl.innerHTML = `
+  <div class="card-header">
+    <div>
+      <p class="eyebrow">Projects</p>
+      <h2>Pass vs Fail</h2>
+    </div>
+    <div class="badge">${totalProjects} total</div>
+  </div>
+  <svg class="donut-chart" viewBox="0 0 180 160" role="img" aria-label="Projects pass and fail donut chart">
+    <g transform="translate(90 80) rotate(-90)">
+      <circle class="donut-track" r="${radius}" cx="0" cy="0"></circle>
+      <circle class="donut-pass" r="${radius}" cx="0" cy="0"
+        stroke-dasharray="${passLength} ${circumference - passLength}"></circle>
+      <circle class="donut-fail" r="${radius}" cx="0" cy="0"
+        stroke-dasharray="${failLength} ${circumference - failLength}"
+        stroke-dashoffset="-${passLength}"></circle>
+    </g>
+    <text class="donut-total" x="90" y="78">${totalProjects}</text>
+    <text class="donut-sub" x="90" y="98">projects</text>
+  </svg>
+  <div class="chart-legend">
+    <span class="legend-item"><span class="legend-swatch pass"></span>${passProjects} passed</span>
+    <span class="legend-item"><span class="legend-swatch fail"></span>${failProjects} failed</span>
+  </div>
+`;
+    }
+
+    if (auditChartEl) {
+      const totalAudit = done + receive;
+      const barMax = 220;
+      const doneWidth = totalAudit ? (done / totalAudit) * barMax : 0;
+      const receiveWidth = totalAudit ? (receive / totalAudit) * barMax : 0;
+
+      auditChartEl.innerHTML = `
+  <div class="card-header">
+    <div>
+      <p class="eyebrow">Audits</p>
+      <h2>Flow balance</h2>
+    </div>
+    <div class="badge">${ratioValue}</div>
+  </div>
+  <svg class="flow-chart" viewBox="0 0 300 120" role="img" aria-label="Audit flow bar chart">
+    <text class="flow-label" x="0" y="24">Done</text>
+    <rect class="flow-track" x="70" y="12" width="${barMax}" height="14" rx="7"></rect>
+    <rect class="flow-done" x="70" y="12" width="${doneWidth}" height="14" rx="7"></rect>
+    <text class="flow-value" x="${70 + barMax + 8}" y="24">${doneMB}</text>
+    <text class="flow-label" x="0" y="70">Received</text>
+    <rect class="flow-track" x="70" y="58" width="${barMax}" height="14" rx="7"></rect>
+    <rect class="flow-receive" x="70" y="58" width="${receiveWidth}" height="14" rx="7"></rect>
+    <text class="flow-value" x="${70 + barMax + 8}" y="70">${receiveMB}</text>
+  </svg>
+`;
     }
   } catch (err) {
     console.error(err);
