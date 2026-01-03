@@ -210,8 +210,9 @@ const reciveConvertor = (value) => {
       String((Math.round((value / 1_000_000) * 100) / 100).toFixed(2)) + " MB"
     );
   }
+  console.log("val:", Math.round(value/1000));
 
-  return String((Math.round((value / 1_000) * 100) / 100).toFixed(2)) + " KB";
+  return String(Math.round((value / 1_000) ).toFixed(0)) + " KB";
 };
 
 const convertBytes = (bytes) => {
