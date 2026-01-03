@@ -488,6 +488,7 @@ const init = async () => {
   </svg>
 `;
     }
+
   } catch (err) {
     console.error(err);
     infoEl.innerHTML = `<p>Error loading profile data.</p>`;

@@ -291,12 +291,9 @@ button:hover {
   z-index: 2;
 }
 
-.dashboard-charts .card {
-  height: 100%;
-}
-
 .dashboard-charts .audit-chart {
   grid-column: 1 / -1;
+  align-self: start;
 }
 
 @media (max-width: 1200px) {
@@ -398,6 +395,10 @@ button:hover {
   width: 100%;
   height: auto;
   display: block;
+}
+
+.audit-chart .flow-chart {
+  height: 20px;
 }
 
 .donut-track {
