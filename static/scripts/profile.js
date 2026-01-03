@@ -146,7 +146,7 @@ const renderXPChart = (container, rows) => {
   const maxValue = Math.max(series[series.length - 1]?.value ?? 0, 1);
 
   const width = 680;
-  const height = 260;
+  const height = 420;
   const margin = { top: 20, right: 36, bottom: 34, left: 40 };
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
