@@ -210,9 +210,9 @@ const reciveConvertor = (value) => {
       String((Math.round((value / 1_000_000) * 100) / 100).toFixed(2)) + " MB"
     );
   }
-  console.log("val:", Math.round(value/1000));
+  console.log("val:", Math.round(value / 1000));
 
-  return String(Math.round((value / 1_000) ).toFixed(0)) + " KB";
+  return String(Math.round(value / 1_000).toFixed(0)) + " KB";
 };
 
 const convertBytes = (bytes) => {
@@ -284,6 +284,7 @@ const init = async () => {
 
     const skill = await mySkills();
     console.log("skillInit:", skill);
+    const skillsEl = document.getElementById("skills");
 
     infoEl.innerHTML = `
   <div class="card-header">
@@ -333,6 +334,37 @@ const init = async () => {
   </div>
   <p class="stat-meta">${ratioMessage}</p>
 `;
+
+    if (skillsEl) {
+      const skillEntries = Object.entries(skill || {});
+      const topSkills = skillEntries
+        .sort(([, countA], [, countB]) => countB - countA)
+        .slice(0, 3);
+      const skillCount = skillEntries.length;
+      const skillsMarkup = topSkills
+        .map(([name, count]) => {
+          const label = name.replace(/^skill_/, "").replace(/_/g, " ");
+          return `
+    <div class="stat">
+      <p class="stat-label">${label}</p>
+      <p class="stat-value">${count}</p>
+    </div>
+  `;
+        })
+        .join("");
+
+      skillsEl.innerHTML = `
+  <div class="card-header">
+    <div>
+      <p class="eyebrow">Skills</p>
+      <h2>Top Three</h2>
+    </div>
+  </div>
+  <div class="stat-grid">
+    ${skillsMarkup || `<p class="stat-meta">No skills yet.</p>`}
+  </div>
+`;
+    }
   } catch (err) {
     console.error(err);
     infoEl.innerHTML = `<p>Error loading profile data.</p>`;
