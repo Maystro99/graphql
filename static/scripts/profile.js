@@ -58,6 +58,7 @@ const loadXP = async () => {
           _or: [
             { path: { _nlike: "%/piscine%" } }
             { path: { _eq: "/bahrain/bh-module/piscine-js" } }
+            { path: { _eq: "/bahrain/bh-module/piscine-rust" } }
           ]
         }
       ) {
@@ -78,38 +79,45 @@ const loadXP = async () => {
 
 const passAndFailProject = async () => {
   const query = `
-query {
-  passed_projects: result_aggregate(
-    where: {
-      grade: { _gt: 1 }
-      object: { type: { _eq: "project" } }
-    }
-  ) {
-    aggregate {
-      count(distinct: true, columns: objectId)
-    }
-  }
+    query {
+      total_projects: result_aggregate(
+        where: {
+          object: { type: { _eq: "project" } }
+        }
+      ) {
+        aggregate {
+          count(distinct: true, columns: objectId)
+        }
+      }
 
-  failed_projects: result_aggregate(
-    where: {
-      grade: { _gt: -1, _lt: 1 }
-      object: { type: { _eq: "project" } }
-    }
-  ) {
-    aggregate {
-      count(distinct: true, columns: objectId)
-    }
-  }
-}
+      passed_projects: result_aggregate(
+        where: {
+          grade: { _gt: 1 }
+          object: { type: { _eq: "project" } }
+        }
+      ) {
+        aggregate {
+          count(distinct: true, columns: objectId)
+        }
+      }
 
+      failed_projects: result_aggregate(
+        where: {
+          grade: { _gt: -1, _lt: 1 }
+          object: { type: { _eq: "project" } }
+        }
+      ) {
+        aggregate {
+          count(distinct: true, columns: objectId)
+        }
+      }
+    }
   `;
 
   const data = await gql(query);
 
-  console.log("Passed projects:", data.passed_projects.aggregate.count);
-  console.log("Failed projects:", data.failed_projects.aggregate.count);
-
   return {
+    total: data.total_projects.aggregate.count,
     pass: data.passed_projects.aggregate.count,
     fail: data.failed_projects.aggregate.count,
   };
@@ -206,16 +214,38 @@ const reciveConvertor = (value) => {
   return String((Math.round((value / 1_000) * 100) / 100).toFixed(2)) + " KB";
 };
 
+const convertBytes = (bytes) => {
+  if (bytes >= 1_000_000) {
+    const mb = bytes / 1_000_000;
+
+    const thirdDecimal = Math.floor(mb * 1000) % 10;
+
+    let result;
+    if (thirdDecimal >= 7) {
+      result = Math.ceil(mb * 100) / 100;
+    } else {
+      result = Math.floor(mb * 100) / 100;
+    }
+
+    return `${result.toFixed(2)} MB`;
+  }
+
+  const kb = bytes / 1000;
+  const roundedKB = Math.round(kb);
+  return `${roundedKB} KB`;
+};
+
 const init = async () => {
   try {
     const userID = await loadUser();
 
-    const totalXP = await loadXP(userID);
-    const displayXP = String(Math.round(totalXP / 1000)).slice(0, 3);
+    const totalXP = await loadXP();
+    const displayXP = convertBytes(totalXP);
     const passAndFail = await passAndFailProject();
     console.log(passAndFail);
     const pass = passAndFail?.pass ?? 0;
     const fail = passAndFail?.fail ?? 0;
+    const toatl = passAndFail?.total ?? 0;
     const ratio = await auditRatio();
 
     const done = ratio?.done ?? 0;
@@ -265,11 +295,11 @@ const init = async () => {
   <div class="stat-grid">
     <div class="stat">
       <p class="stat-label">Total XP</p>
-      <p class="stat-value">${displayXP} KB</p>
+      <p class="stat-value">${displayXP}</p>
     </div>
     <div class="stat">
       <p class="stat-label">Projects</p>
-      <p class="stat-value">${pass + fail}</p>
+      <p class="stat-value">${toatl}</p>
       <p class="stat-meta">${pass} passed · ${fail} failed</p>
     </div>
     <div class="stat">
