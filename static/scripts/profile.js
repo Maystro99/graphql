@@ -145,8 +145,8 @@ const renderXPChart = (container, rows) => {
   const timeSpan = Math.max(endTime - startTime, 1);
   const maxValue = Math.max(series[series.length - 1]?.value ?? 0, 1);
 
-  const width = 680;
-  const height = 420;
+  const width = 720;
+  const height = 580;
   const margin = { top: 20, right: 36, bottom: 34, left: 40 };
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
@@ -188,6 +188,106 @@ const renderXPChart = (container, rows) => {
     <text class="xp-label" x="${margin.left}" y="${height - 12}">${startLabel}</text>
     <text class="xp-label" x="${width - margin.right}" y="${height - 12}" text-anchor="end">${endLabel}</text>
     <text class="xp-total" x="${Math.min(lastX + 8, width - margin.right)}" y="${Math.max(lastY - 10, margin.top + 12)}">${totalLabel}</text>
+  </svg>
+`;
+};
+
+const renderSkillsRadar = (container, skills) => {
+  if (!container) return;
+  const entries = Object.entries(skills || {}).sort(
+    ([, countA], [, countB]) => countB - countA
+  );
+  if (!entries.length) {
+    container.innerHTML = `
+  <div class="card-header">
+    <div>
+      <p class="eyebrow">Skills</p>
+      <h2>All skills</h2>
+    </div>
+    <div class="badge">0 total</div>
+  </div>
+  <p class="stat-meta">No skills yet.</p>
+`;
+    return;
+  }
+
+  const labels = entries.map(([name]) =>
+    name.replace(/^skill_/, "").replace(/_/g, " ")
+  );
+  const values = entries.map(([, count]) => count);
+  const maxValue = Math.max(...values, 1);
+
+  const size = 360;
+  const center = size / 2;
+  const radius = 130;
+  const rings = 5;
+
+  const ringCircles = Array.from({ length: rings }, (_, index) => {
+    const r = (radius / rings) * (index + 1);
+    return `<circle class="radar-grid" cx="${center}" cy="${center}" r="${r}"></circle>`;
+  }).join("");
+
+  const axisLines = labels
+    .map((_, index) => {
+      const angle = (Math.PI * 2 * index) / labels.length - Math.PI / 2;
+      const x = center + Math.cos(angle) * radius;
+      const y = center + Math.sin(angle) * radius;
+      return `<line class="radar-axis" x1="${center}" y1="${center}" x2="${x}" y2="${y}"></line>`;
+    })
+    .join("");
+
+  const areaPoints = values
+    .map((value, index) => {
+      const ratio = value / maxValue;
+      const angle = (Math.PI * 2 * index) / labels.length - Math.PI / 2;
+      const x = center + Math.cos(angle) * radius * ratio;
+      const y = center + Math.sin(angle) * radius * ratio;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  const dots = values
+    .map((value, index) => {
+      const ratio = value / maxValue;
+      const angle = (Math.PI * 2 * index) / labels.length - Math.PI / 2;
+      const x = center + Math.cos(angle) * radius * ratio;
+      const y = center + Math.sin(angle) * radius * ratio;
+      return `<circle class="radar-dot" cx="${x}" cy="${y}" r="3"></circle>`;
+    })
+    .join("");
+
+  const labelOffset = 18;
+  const axisLabels = labels
+    .map((label, index) => {
+      const angle = (Math.PI * 2 * index) / labels.length - Math.PI / 2;
+      const x = center + Math.cos(angle) * (radius + labelOffset);
+      const y = center + Math.sin(angle) * (radius + labelOffset);
+      const anchor =
+        Math.cos(angle) > 0.2
+          ? "start"
+          : Math.cos(angle) < -0.2
+          ? "end"
+          : "middle";
+      const dy =
+        Math.sin(angle) > 0.3 ? "0.9em" : Math.sin(angle) < -0.3 ? "-0.3em" : "0.35em";
+      return `<text class="radar-label" x="${x}" y="${y}" text-anchor="${anchor}" dy="${dy}">${label}</text>`;
+    })
+    .join("");
+
+  container.innerHTML = `
+  <div class="card-header">
+    <div>
+      <p class="eyebrow">Skills</p>
+      <h2>Strength map</h2>
+    </div>
+    <div class="badge">${entries.length} total</div>
+  </div>
+  <svg class="radar-plot" viewBox="0 0 ${size} ${size}" role="img" aria-label="Skills radar chart">
+    ${ringCircles}
+    ${axisLines}
+    <polygon class="radar-area" points="${areaPoints}"></polygon>
+    ${dots}
+    ${axisLabels}
   </svg>
 `;
 };
@@ -405,6 +505,7 @@ const init = async () => {
     const projectChartEl = document.getElementById("project-chart");
     const auditChartEl = document.getElementById("audit-chart");
     const xpChartEl = document.getElementById("xp-chart");
+    const skillsRadarEl = document.getElementById("skills-radar");
 
     infoEl.innerHTML = `
   <div class="card-header">
@@ -456,6 +557,7 @@ const init = async () => {
 `;
 
     renderXPChart(xpChartEl, xpHistory);
+    renderSkillsRadar(skillsRadarEl, skill);
 
     if (skillsEl) {
       const skillEntries = Object.entries(skill || {});

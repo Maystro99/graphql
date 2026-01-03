@@ -401,10 +401,6 @@ button:hover {
   display: block;
 }
 
-.xp-chart {
-  grid-column: 1 / -1;
-}
-
 .xp-chart .xp-graph {
   width: 100%;
   height: auto;
@@ -441,6 +437,59 @@ button:hover {
   fill: var(--text);
   font-size: 12px;
   font-weight: 600;
+}
+
+.xp-skill-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.xp-skill-row .card {
+  min-height: 520px;
+}
+
+@media (max-width: 900px) {
+  .xp-skill-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.skills-radar .radar-plot {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.skills-radar .radar-grid {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+}
+
+.skills-radar .radar-axis {
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 1;
+}
+
+.skills-radar .radar-area {
+  fill: rgba(163, 118, 255, 0.35);
+  stroke: rgba(189, 151, 255, 0.9);
+  stroke-width: 2;
+}
+
+.skills-radar .radar-dot {
+  fill: rgba(189, 151, 255, 0.95);
+  stroke: rgba(7, 17, 31, 0.85);
+  stroke-width: 1.5;
+}
+
+.skills-radar .radar-label {
+  fill: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
 }
 
 .audit-chart .flow-chart {
