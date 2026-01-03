@@ -141,7 +141,7 @@ const auditRatio = async () => {
 
   const data = await gql(query);
   console.log("Done:", data.Done.aggregate.sum.amount);
-  console.log("Recive:", data.Receive.aggregate.sum.amount);
+  console.log("ReciveConvertor:", data.Receive.aggregate.sum.amount);
 
   return {
     done: data?.Done?.aggregate?.sum?.amount ?? 0,
@@ -175,14 +175,35 @@ const mySkills = async () => {
   return skillCounts;
 };
 
-const convertor = (value) => {
+const doneConvertor = (value) => {
+  const roundCustom = (num) => {
+    const scaled = num * 1000;
+    const thirdDecimal = Math.floor(scaled) % 10;
+
+    if (thirdDecimal >= 7) {
+      return (Math.ceil(num * 100) / 100).toFixed(2);
+    } else {
+      return (Math.floor(num * 100) / 100).toFixed(2);
+    }
+  };
+
+  if (value >= 1_000_000) {
+    const mb = value / 1_000_000;
+    return `${roundCustom(mb)} MB`;
+  }
+
+  const kb = value / 1_000;
+  return `${roundCustom(kb)} KB`;
+};
+
+const reciveConvertor = (value) => {
   if (value >= 1000000) {
     return (
-      String((Math.floor((value / 1_000_000) * 100) / 100).toFixed(2)) + " MB"
+      String((Math.round((value / 1_000_000) * 100) / 100).toFixed(2)) + " MB"
     );
   }
-  // show kB
-  return String((Math.floor((value / 1_000) * 100) / 100).toFixed(2)) + " KB";
+
+  return String((Math.round((value / 1_000) * 100) / 100).toFixed(2)) + " KB";
 };
 
 const init = async () => {
@@ -200,8 +221,8 @@ const init = async () => {
     const done = ratio?.done ?? 0;
     const receive = ratio?.receive ?? 0;
 
-    const doneMB = convertor(done);
-    const receiveMB = convertor(receive);
+    const doneMB = doneConvertor(done);
+    const receiveMB = reciveConvertor(receive);
 
     const ratioNumber = receive > 0 ? done / receive : null;
     const ratioValue = ratioNumber !== null ? ratioNumber.toFixed(1) : "N/A";
