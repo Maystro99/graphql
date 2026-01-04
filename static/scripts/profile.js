@@ -1,475 +1,23 @@
-const FULLDATA_API = "https://learn.reboot01.com/api/graphql-engine/v1/graphql";
+import {
+  loadUser,
+  auditRatio,
+  loadXP,
+  loadXPHistory,
+  mySkills,
+  passAndFailProject,
+} from "./queries.js";
 
-const loginNameEl = document.getElementById("login-name");
+import { renderSkillsRadar, renderXPChart } from "./svg.js";
+
+import {
+  convertBytes,
+  doneConvertor,
+  readCssNumber,
+  reciveConvertor,
+} from "./convertor.js";
+
 const infoEl = document.getElementById("info");
 const statsEl = document.getElementById("stats");
-
-const readCssNumber = (name, fallback) => {
-  const raw = getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim();
-  const parsed = Number.parseFloat(raw);
-  return Number.isFinite(parsed) ? parsed : fallback;
-};
-
-const gql = async (query) => {
-  const token = localStorage.getItem("jwt");
-
-  if (!token) {
-    window.location.href = "../index.html";
-    return;
-  }
-
-  const res = await fetch(FULLDATA_API, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ query }),
-  });
-
-  const json = await res.json();
-  console.log("API result:", json);
-
-  if (json.errors) {
-    console.error("GraphQL errors:", json.errors);
-    throw new Error("GraphQL query failed");
-  }
-
-  return json.data;
-};
-
-const loadUser = async () => {
-  const query = `
-    query {
-      user {
-        login
-        id
-      }
-    }
-  `;
-
-  const data = await gql(query);
-  loginNameEl.textContent = data.user[0].login;
-  console.log("user data:", data.user[0]);
-  return data.user[0].id;
-};
-
-const loadXP = async () => {
-  const query = `
-    query {
-      transaction_aggregate(
-        where: {
-          type: { _eq: "xp" }
-          path: { _like: "%/bh-module/%" }
-          _or: [
-            { path: { _nlike: "%/piscine%" } }
-            { path: { _eq: "/bahrain/bh-module/piscine-js" } }
-            { path: { _eq: "/bahrain/bh-module/piscine-rust" } }
-          ]
-        }
-      ) {
-        aggregate {
-          sum {
-            amount
-          }
-        }
-      }
-    }
-  `;
-
-  const data = await gql(query);
-  console.log("loadOx data:", data.transaction_aggregate.aggregate.sum);
-
-  return data.transaction_aggregate.aggregate.sum.amount ?? 0;
-};
-
-const loadXPHistory = async () => {
-  const query = `
-    query {
-      transaction(
-        where: {
-          type: { _eq: "xp" }
-          path: { _like: "%/bh-module/%" }
-          _or: [
-            { path: { _nlike: "%/piscine%" } }
-            { path: { _eq: "/bahrain/bh-module/piscine-js" } }
-            { path: { _eq: "/bahrain/bh-module/piscine-rust" } }
-          ]
-        }
-        order_by: { createdAt: asc }
-      ) {
-        amount
-        createdAt
-      }
-    }
-  `;
-
-  const data = await gql(query);
-  return data.transaction || [];
-};
-
-const formatShortDate = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-  });
-};
-
-const renderXPChart = (container, rows) => {
-  if (!container) return;
-  if (!rows || rows.length === 0) {
-    container.innerHTML = `
-  <div class="card-header">
-    <div>
-      <p class="eyebrow">XP</p>
-      <h2>Learning curve</h2>
-    </div>
-    <div class="badge">No data</div>
-  </div>
-  <p class="stat-meta">No XP activity yet.</p>
-`;
-    return;
-  }
-
-  const sortedRows = [...rows].sort(
-    (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-  );
-  let running = 0;
-  const series = sortedRows.map((row) => {
-    running += row.amount || 0;
-    return {
-      time: new Date(row.createdAt).getTime(),
-      value: running,
-    };
-  });
-
-  const startTime = series[0]?.time ?? 0;
-  const endTime = series[series.length - 1]?.time ?? startTime + 1;
-  const timeSpan = Math.max(endTime - startTime, 1);
-  const maxValue = Math.max(series[series.length - 1]?.value ?? 0, 1);
-
-  const width = readCssNumber("--xp-chart-width", 720);
-  const height = readCssNumber("--xp-chart-height", 580);
-  const margin = {
-    top: readCssNumber("--xp-margin-top", 20),
-    right: readCssNumber("--xp-margin-right", 36),
-    bottom: readCssNumber("--xp-margin-bottom", 34),
-    left: readCssNumber("--xp-margin-left", 40),
-  };
-  const plotWidth = width - margin.left - margin.right;
-  const plotHeight = height - margin.top - margin.bottom;
-  const frameRadius = readCssNumber("--xp-frame-radius", 16);
-  const dotRadius = readCssNumber("--xp-dot-radius", 4);
-  const labelOffsetY = readCssNumber("--xp-label-offset-y", 12);
-  const totalOffsetX = readCssNumber("--xp-total-offset-x", 8);
-  const totalOffsetY = readCssNumber("--xp-total-offset-y", 10);
-  const totalMinY = readCssNumber("--xp-total-min-y", 12);
-
-  const toX = (time) =>
-    margin.left + ((time - startTime) / timeSpan) * plotWidth;
-  const toY = (value) =>
-    margin.top + plotHeight - (value / maxValue) * plotHeight;
-
-  const points = [];
-  let prev = series[0];
-  points.push(`${toX(prev.time)},${toY(prev.value)}`);
-  for (let i = 1; i < series.length; i += 1) {
-    const current = series[i];
-    points.push(`${toX(current.time)},${toY(prev.value)}`);
-    points.push(`${toX(current.time)},${toY(current.value)}`);
-    prev = current;
-  }
-
-  const startLabel = formatShortDate(sortedRows[0]?.createdAt);
-  const endLabel = formatShortDate(sortedRows[sortedRows.length - 1]?.createdAt);
-  const totalLabel = convertBytes(series[series.length - 1]?.value ?? 0);
-  const lastPoint = points[points.length - 1]?.split(",") || [];
-  const lastX = Number(lastPoint[0]) || margin.left;
-  const lastY = Number(lastPoint[1]) || margin.top + plotHeight;
-
-  container.innerHTML = `
-  <div class="card-header">
-    <div>
-      <p class="eyebrow">XP</p>
-      <h2>Learning curve</h2>
-    </div>
-    <div class="badge">${totalLabel} total</div>
-  </div>
-  <svg class="xp-graph" viewBox="0 0 ${width} ${height}" role="img" aria-label="XP over time chart">
-    <rect class="xp-frame" x="${margin.left}" y="${margin.top}" width="${plotWidth}" height="${plotHeight}" rx="${frameRadius}"></rect>
-    <path class="xp-line" d="M ${points.join(" L ")}"></path>
-    <circle class="xp-dot" cx="${lastX}" cy="${lastY}" r="${dotRadius}"></circle>
-    <text class="xp-label" x="${margin.left}" y="${height - labelOffsetY}">${startLabel}</text>
-    <text class="xp-label" x="${width - margin.right}" y="${height - labelOffsetY}" text-anchor="end">${endLabel}</text>
-    <text class="xp-total" x="${Math.min(lastX + totalOffsetX, width - margin.right)}" y="${Math.max(lastY - totalOffsetY, margin.top + totalMinY)}">${totalLabel}</text>
-  </svg>
-`;
-};
-
-const renderSkillsRadar = (container, skills) => {
-  if (!container) return;
-  const entries = Object.entries(skills || {}).sort(
-    ([, countA], [, countB]) => countB - countA
-  );
-  if (!entries.length) {
-    container.innerHTML = `
-  <div class="card-header">
-    <div>
-      <p class="eyebrow">Skills</p>
-      <h2>All skills</h2>
-    </div>
-    <div class="badge">0 total</div>
-  </div>
-  <p class="stat-meta">No skills yet.</p>
-`;
-    return;
-  }
-
-  const labels = entries.map(([name]) =>
-    name.replace(/^skill_/, "").replace(/_/g, " ")
-  );
-  const values = entries.map(([, count]) => count);
-  const maxValue = Math.max(...values, 1);
-
-  const size = readCssNumber("--radar-size", 360);
-  const center = size / 2;
-  const radius = readCssNumber("--radar-radius", 130);
-  const rings = Math.round(readCssNumber("--radar-rings", 5));
-  const dotRadius = readCssNumber("--radar-dot-radius", 3);
-
-  const ringCircles = Array.from({ length: rings }, (_, index) => {
-    const r = (radius / rings) * (index + 1);
-    return `<circle class="radar-grid" cx="${center}" cy="${center}" r="${r}"></circle>`;
-  }).join("");
-
-  const axisLines = labels
-    .map((_, index) => {
-      const angle = (Math.PI * 2 * index) / labels.length - Math.PI / 2;
-      const x = center + Math.cos(angle) * radius;
-      const y = center + Math.sin(angle) * radius;
-      return `<line class="radar-axis" x1="${center}" y1="${center}" x2="${x}" y2="${y}"></line>`;
-    })
-    .join("");
-
-  const areaPoints = values
-    .map((value, index) => {
-      const ratio = value / maxValue;
-      const angle = (Math.PI * 2 * index) / labels.length - Math.PI / 2;
-      const x = center + Math.cos(angle) * radius * ratio;
-      const y = center + Math.sin(angle) * radius * ratio;
-      return `${x},${y}`;
-    })
-    .join(" ");
-
-  const dots = values
-    .map((value, index) => {
-      const ratio = value / maxValue;
-      const angle = (Math.PI * 2 * index) / labels.length - Math.PI / 2;
-      const x = center + Math.cos(angle) * radius * ratio;
-      const y = center + Math.sin(angle) * radius * ratio;
-      return `<circle class="radar-dot" cx="${x}" cy="${y}" r="${dotRadius}"></circle>`;
-    })
-    .join("");
-
-  const labelOffset = readCssNumber("--radar-label-offset", 18);
-  const axisLabels = labels
-    .map((label, index) => {
-      const angle = (Math.PI * 2 * index) / labels.length - Math.PI / 2;
-      const x = center + Math.cos(angle) * (radius + labelOffset);
-      const y = center + Math.sin(angle) * (radius + labelOffset);
-      const anchor =
-        Math.cos(angle) > 0.2
-          ? "start"
-          : Math.cos(angle) < -0.2
-          ? "end"
-          : "middle";
-      const dy =
-        Math.sin(angle) > 0.3 ? "0.9em" : Math.sin(angle) < -0.3 ? "-0.3em" : "0.35em";
-      return `<text class="radar-label" x="${x}" y="${y}" text-anchor="${anchor}" dy="${dy}">${label}</text>`;
-    })
-    .join("");
-
-  container.innerHTML = `
-  <div class="card-header">
-    <div>
-      <p class="eyebrow">Skills</p>
-      <h2>Strength map</h2>
-    </div>
-    <div class="badge">${entries.length} total</div>
-  </div>
-  <svg class="radar-plot" viewBox="0 0 ${size} ${size}" role="img" aria-label="Skills radar chart">
-    ${ringCircles}
-    ${axisLines}
-    <polygon class="radar-area" points="${areaPoints}"></polygon>
-    ${dots}
-    ${axisLabels}
-  </svg>
-`;
-};
-
-const passAndFailProject = async () => {
-  const query = `
-    query {
-      total_projects: result_aggregate(
-        where: {
-          object: { type: { _eq: "project" } }
-        }
-      ) {
-        aggregate {
-          count(distinct: true, columns: objectId)
-        }
-      }
-
-      passed_projects: result_aggregate(
-        where: {
-          grade: { _gt: 1 }
-          object: { type: { _eq: "project" } }
-        }
-      ) {
-        aggregate {
-          count(distinct: true, columns: objectId)
-        }
-      }
-
-      failed_projects: result_aggregate(
-        where: {
-          grade: { _gt: -1, _lt: 1 }
-          object: { type: { _eq: "project" } }
-        }
-      ) {
-        aggregate {
-          count(distinct: true, columns: objectId)
-        }
-      }
-    }
-  `;
-
-  const data = await gql(query);
-
-  return {
-    total: data.total_projects.aggregate.count,
-    pass: data.passed_projects.aggregate.count,
-    fail: data.failed_projects.aggregate.count,
-  };
-};
-
-const auditRatio = async () => {
-  const query = `
-    query AuditDoneValue {
-      Done: transaction_aggregate(
-        where: { type: { _eq: "up" } }
-      ) {
-        aggregate {
-          sum {
-            amount
-          }
-        }
-      }
-      Receive: transaction_aggregate(
-        where: { type: { _eq: "down" } }
-      ) {
-        aggregate {
-          sum {
-            amount
-          }
-        }
-      }
-    }
-  `;
-
-  const data = await gql(query);
-  console.log("Done:", data.Done.aggregate.sum.amount);
-  console.log("ReciveConvertor:", data.Receive.aggregate.sum.amount);
-
-  return {
-    done: data?.Done?.aggregate?.sum?.amount ?? 0,
-    receive: data?.Receive?.aggregate?.sum?.amount ?? 0,
-  };
-};
-
-const mySkills = async () => {
-  const query = `
-    query {
-      transaction(where: { type: { _like: "skill_%" } }) {
-        type
-      }
-    }
-  `;
-
-  const data = await gql(query);
-
-  const rows = data.transaction;
-
-  console.log("skills:", rows);
-
-  const skillCounts = {};
-
-  rows.forEach((row) => {
-    skillCounts[row.type] = (skillCounts[row.type] || 0) + 1;
-  });
-
-  // console.log("counted Skills:", skillCounts);
-
-  return skillCounts;
-};
-
-const doneConvertor = (value) => {
-  const roundCustom = (num) => {
-    const scaled = num * 1000;
-    const thirdDecimal = Math.floor(scaled) % 10;
-
-    if (thirdDecimal >= 7) {
-      return (Math.ceil(num * 100) / 100).toFixed(2);
-    } else {
-      return (Math.floor(num * 100) / 100).toFixed(2);
-    }
-  };
-
-  if (value >= 1_000_000) {
-    const mb = value / 1_000_000;
-    return `${roundCustom(mb)} MB`;
-  }
-
-  const kb = value / 1_000;
-  return `${roundCustom(kb)} KB`;
-};
-
-const reciveConvertor = (value) => {
-  if (value >= 1000000) {
-    return (
-      String((Math.round((value / 1_000_000) * 100) / 100).toFixed(2)) + " MB"
-    );
-  }
-  console.log("val:", Math.round(value / 1000));
-
-  return String(Math.round(value / 1_000).toFixed(0)) + " KB";
-};
-
-const convertBytes = (bytes) => {
-  if (bytes >= 1_000_000) {
-    const mb = bytes / 1_000_000;
-
-    const thirdDecimal = Math.floor(mb * 1000) % 10;
-
-    let result;
-    if (thirdDecimal >= 7) {
-      result = Math.ceil(mb * 100) / 100;
-    } else {
-      result = Math.floor(mb * 100) / 100;
-    }
-
-    return `${result.toFixed(2)} MB`;
-  }
-
-  const kb = bytes / 1000;
-  const roundedKB = Math.round(kb);
-  return `${roundedKB} KB`;
-};
 
 const init = async () => {
   try {
@@ -646,7 +194,9 @@ const init = async () => {
               maxCount === 0 ? 0 : Math.round((count / maxCount) * barMaxWidth);
             const y = index * (barHeight + barGap) + chartPadding;
             return `
-    <text class="chart-label" x="0" y="${y + barHeight - textOffsetY}">${label}</text>
+    <text class="chart-label" x="0" y="${
+      y + barHeight - textOffsetY
+    }">${label}</text>
     <rect class="bar-track" x="${labelWidth}" y="${y}" width="${barMaxWidth}" height="${barHeight}" rx="${barRadius}" />
     <rect class="bar-fill" x="${labelWidth}" y="${y}" width="${barWidth}" height="${barHeight}" rx="${barRadius}" />
     <text class="chart-count" x="${
@@ -706,8 +256,12 @@ const init = async () => {
         stroke-dasharray="${failLength} ${circumference - failLength}"
         stroke-dashoffset="-${passLength}"></circle>
     </g>
-    <text class="donut-total" x="${donutCenterX}" y="${donutCenterY + donutTotalOffsetY}">${totalProjects}</text>
-    <text class="donut-sub" x="${donutCenterX}" y="${donutCenterY + donutSubOffsetY}">projects</text>
+    <text class="donut-total" x="${donutCenterX}" y="${
+        donutCenterY + donutTotalOffsetY
+      }">${totalProjects}</text>
+    <text class="donut-sub" x="${donutCenterX}" y="${
+        donutCenterY + donutSubOffsetY
+      }">projects</text>
   </svg>
   <div class="chart-legend">
     <span class="legend-item"><span class="legend-swatch pass"></span>${passProjects} passed</span>
@@ -748,13 +302,17 @@ const init = async () => {
     <div class="badge">${ratioValue}</div>
   </div>
   <svg class="flow-chart" viewBox="0 0 ${chartWidth} ${chartHeight}" role="img" aria-label="Audit flow bar chart">
-    <text class="flow-label" x="0" y="${doneY + barHeight - textOffsetY}">Done</text>
+    <text class="flow-label" x="0" y="${
+      doneY + barHeight - textOffsetY
+    }">Done</text>
     <rect class="flow-track" x="${labelWidth}" y="${doneY}" width="${barMax}" height="${barHeight}" rx="${barRadius}"></rect>
     <rect class="flow-done" x="${labelWidth}" y="${doneY}" width="${doneWidth}" height="${barHeight}" rx="${barRadius}"></rect>
     <text class="flow-value" x="${labelWidth + barMax + valueOffsetX}" y="${
         doneY + barHeight - textOffsetY
       }">${doneMB}</text>
-    <text class="flow-label" x="0" y="${receiveY + barHeight - textOffsetY}">Received</text>
+    <text class="flow-label" x="0" y="${
+      receiveY + barHeight - textOffsetY
+    }">Received</text>
     <rect class="flow-track" x="${labelWidth}" y="${receiveY}" width="${barMax}" height="${barHeight}" rx="${barRadius}"></rect>
     <rect class="flow-receive" x="${labelWidth}" y="${receiveY}" width="${receiveWidth}" height="${barHeight}" rx="${barRadius}"></rect>
     <text class="flow-value" x="${labelWidth + barMax + valueOffsetX}" y="${
@@ -763,7 +321,6 @@ const init = async () => {
   </svg>
 `;
     }
-
   } catch (err) {
     console.error(err);
     infoEl.innerHTML = `<p>Error loading profile data.</p>`;
