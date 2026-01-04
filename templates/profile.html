@@ -21,27 +21,29 @@
     </header>
 
     <main class="dashboard">
-      <section class="card intro">
-        <p class="eyebrow">Welcome back</p>
-        <h2 class="hero-title">Your learning cockpit</h2>
-        <p class="lead">
-          Track XP, project outcomes, and audit flow with a clearer, calmer
-          snapshot of your progress.
-        </p>
-        <div class="chip-row">
-          <span class="chip">XP</span>
-          <span class="chip">Projects</span>
-          <span class="chip">Audits</span>
-          <span class="chip">Skills</span>
+      <div id="mainPage">
+        <section class="card intro">
+          <p class="eyebrow">Welcome back</p>
+          <h2 class="hero-title">Your learning cockpit</h2>
+          <p class="lead">
+            Track XP, project outcomes, and audit flow with a clearer, calmer
+            snapshot of your progress.
+          </p>
+          <div class="chip-row">
+            <span class="chip">XP</span>
+            <span class="chip">Projects</span>
+            <span class="chip">Audits</span>
+            <span class="chip">Skills</span>
+          </div>
+        </section>
+        <section class="card overview" id="info"></section>
+        <section class="card metrics" id="stats"></section>
+        <section class="card skills" id="skills"></section>
+        <div class="dashboard-charts">
+          <section class="card skills-chart" id="skills-chart"></section>
+          <section class="card project-chart" id="project-chart"></section>
+          <section class="card audit-chart" id="audit-chart"></section>
         </div>
-      </section>
-      <section class="card overview" id="info"></section>
-      <section class="card metrics" id="stats"></section>
-      <section class="card skills" id="skills"></section>
-      <div class="dashboard-charts">
-        <section class="card skills-chart" id="skills-chart"></section>
-        <section class="card project-chart" id="project-chart"></section>
-        <section class="card audit-chart" id="audit-chart"></section>
       </div>
       <div class="xp-skill-row">
         <section class="card xp-chart" id="xp-chart"></section>

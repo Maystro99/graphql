@@ -4,6 +4,14 @@ const loginNameEl = document.getElementById("login-name");
 const infoEl = document.getElementById("info");
 const statsEl = document.getElementById("stats");
 
+const readCssNumber = (name, fallback) => {
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+  const parsed = Number.parseFloat(raw);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 const gql = async (query) => {
   const token = localStorage.getItem("jwt");
 
@@ -145,11 +153,22 @@ const renderXPChart = (container, rows) => {
   const timeSpan = Math.max(endTime - startTime, 1);
   const maxValue = Math.max(series[series.length - 1]?.value ?? 0, 1);
 
-  const width = 720;
-  const height = 580;
-  const margin = { top: 20, right: 36, bottom: 34, left: 40 };
+  const width = readCssNumber("--xp-chart-width", 720);
+  const height = readCssNumber("--xp-chart-height", 580);
+  const margin = {
+    top: readCssNumber("--xp-margin-top", 20),
+    right: readCssNumber("--xp-margin-right", 36),
+    bottom: readCssNumber("--xp-margin-bottom", 34),
+    left: readCssNumber("--xp-margin-left", 40),
+  };
   const plotWidth = width - margin.left - margin.right;
   const plotHeight = height - margin.top - margin.bottom;
+  const frameRadius = readCssNumber("--xp-frame-radius", 16);
+  const dotRadius = readCssNumber("--xp-dot-radius", 4);
+  const labelOffsetY = readCssNumber("--xp-label-offset-y", 12);
+  const totalOffsetX = readCssNumber("--xp-total-offset-x", 8);
+  const totalOffsetY = readCssNumber("--xp-total-offset-y", 10);
+  const totalMinY = readCssNumber("--xp-total-min-y", 12);
 
   const toX = (time) =>
     margin.left + ((time - startTime) / timeSpan) * plotWidth;
@@ -182,12 +201,12 @@ const renderXPChart = (container, rows) => {
     <div class="badge">${totalLabel} total</div>
   </div>
   <svg class="xp-graph" viewBox="0 0 ${width} ${height}" role="img" aria-label="XP over time chart">
-    <rect class="xp-frame" x="${margin.left}" y="${margin.top}" width="${plotWidth}" height="${plotHeight}" rx="16"></rect>
+    <rect class="xp-frame" x="${margin.left}" y="${margin.top}" width="${plotWidth}" height="${plotHeight}" rx="${frameRadius}"></rect>
     <path class="xp-line" d="M ${points.join(" L ")}"></path>
-    <circle class="xp-dot" cx="${lastX}" cy="${lastY}" r="4"></circle>
-    <text class="xp-label" x="${margin.left}" y="${height - 12}">${startLabel}</text>
-    <text class="xp-label" x="${width - margin.right}" y="${height - 12}" text-anchor="end">${endLabel}</text>
-    <text class="xp-total" x="${Math.min(lastX + 8, width - margin.right)}" y="${Math.max(lastY - 10, margin.top + 12)}">${totalLabel}</text>
+    <circle class="xp-dot" cx="${lastX}" cy="${lastY}" r="${dotRadius}"></circle>
+    <text class="xp-label" x="${margin.left}" y="${height - labelOffsetY}">${startLabel}</text>
+    <text class="xp-label" x="${width - margin.right}" y="${height - labelOffsetY}" text-anchor="end">${endLabel}</text>
+    <text class="xp-total" x="${Math.min(lastX + totalOffsetX, width - margin.right)}" y="${Math.max(lastY - totalOffsetY, margin.top + totalMinY)}">${totalLabel}</text>
   </svg>
 `;
 };
@@ -217,10 +236,11 @@ const renderSkillsRadar = (container, skills) => {
   const values = entries.map(([, count]) => count);
   const maxValue = Math.max(...values, 1);
 
-  const size = 360;
+  const size = readCssNumber("--radar-size", 360);
   const center = size / 2;
-  const radius = 130;
-  const rings = 5;
+  const radius = readCssNumber("--radar-radius", 130);
+  const rings = Math.round(readCssNumber("--radar-rings", 5));
+  const dotRadius = readCssNumber("--radar-dot-radius", 3);
 
   const ringCircles = Array.from({ length: rings }, (_, index) => {
     const r = (radius / rings) * (index + 1);
@@ -252,11 +272,11 @@ const renderSkillsRadar = (container, skills) => {
       const angle = (Math.PI * 2 * index) / labels.length - Math.PI / 2;
       const x = center + Math.cos(angle) * radius * ratio;
       const y = center + Math.sin(angle) * radius * ratio;
-      return `<circle class="radar-dot" cx="${x}" cy="${y}" r="3"></circle>`;
+      return `<circle class="radar-dot" cx="${x}" cy="${y}" r="${dotRadius}"></circle>`;
     })
     .join("");
 
-  const labelOffset = 18;
+  const labelOffset = readCssNumber("--radar-label-offset", 18);
   const axisLabels = labels
     .map((label, index) => {
       const angle = (Math.PI * 2 * index) / labels.length - Math.PI / 2;
@@ -551,7 +571,7 @@ const init = async () => {
     </div>
   </div>
   <div class="ratio-bar ${ratioClass}">
-    <div class="ratio-fill" style="width: ${ratioWidth}%;"></div>
+    <div class="ratio-fill ratio-width-${ratioWidth}"></div>
   </div>
   <p class="stat-meta">${ratioMessage}</p>
 `;
@@ -607,25 +627,31 @@ const init = async () => {
 `;
       } else {
         const maxCount = Math.max(...chartEntries.map(([, count]) => count));
-        const barHeight = 16;
-        const barGap = 12;
-        const labelWidth = 120;
-        const barMaxWidth = 220;
-        const chartHeight = chartEntries.length * (barHeight + barGap) + 8;
-        const chartWidth = labelWidth + barMaxWidth + 40;
+        const barHeight = readCssNumber("--skills-bar-height", 16);
+        const barGap = readCssNumber("--skills-bar-gap", 12);
+        const labelWidth = readCssNumber("--skills-label-width", 120);
+        const barMaxWidth = readCssNumber("--skills-bar-max-width", 220);
+        const barRadius = readCssNumber("--skills-bar-radius", 8);
+        const chartPadding = readCssNumber("--skills-chart-padding", 4);
+        const chartRightPad = readCssNumber("--skills-chart-right-pad", 40);
+        const textOffsetY = readCssNumber("--skills-text-offset-y", 2);
+        const countOffsetX = readCssNumber("--skills-count-offset-x", 8);
+        const chartHeight =
+          chartEntries.length * (barHeight + barGap) + chartPadding * 2;
+        const chartWidth = labelWidth + barMaxWidth + chartRightPad;
         const bars = chartEntries
           .map(([name, count], index) => {
             const label = name.replace(/^skill_/, "").replace(/_/g, " ");
             const barWidth =
               maxCount === 0 ? 0 : Math.round((count / maxCount) * barMaxWidth);
-            const y = index * (barHeight + barGap) + 4;
+            const y = index * (barHeight + barGap) + chartPadding;
             return `
-    <text class="chart-label" x="0" y="${y + barHeight - 2}">${label}</text>
-    <rect class="bar-track" x="${labelWidth}" y="${y}" width="${barMaxWidth}" height="${barHeight}" rx="8" />
-    <rect class="bar-fill" x="${labelWidth}" y="${y}" width="${barWidth}" height="${barHeight}" rx="8" />
+    <text class="chart-label" x="0" y="${y + barHeight - textOffsetY}">${label}</text>
+    <rect class="bar-track" x="${labelWidth}" y="${y}" width="${barMaxWidth}" height="${barHeight}" rx="${barRadius}" />
+    <rect class="bar-fill" x="${labelWidth}" y="${y}" width="${barWidth}" height="${barHeight}" rx="${barRadius}" />
     <text class="chart-count" x="${
-      labelWidth + barMaxWidth + 8
-    }" y="${y + barHeight - 2}">${count}</text>
+      labelWidth + barMaxWidth + countOffsetX
+    }" y="${y + barHeight - textOffsetY}">${count}</text>
   `;
           })
           .join("");
@@ -649,7 +675,14 @@ const init = async () => {
       const totalProjects = toatl;
       const passProjects = pass;
       const failProjects = fail;
-      const radius = 52;
+      const donutWidth = readCssNumber("--donut-viewbox-width", 180);
+      const donutHeight = readCssNumber("--donut-viewbox-height", 160);
+      const donutCenterX = donutWidth / 2;
+      const donutCenterY = donutHeight / 2;
+      const radius = readCssNumber("--donut-radius", 52);
+      const donutRotation = readCssNumber("--donut-rotation", -90);
+      const donutTotalOffsetY = readCssNumber("--donut-total-offset-y", -2);
+      const donutSubOffsetY = readCssNumber("--donut-sub-offset-y", 18);
       const circumference = 2 * Math.PI * radius;
       const passRatio = totalProjects ? passProjects / totalProjects : 0;
       const failRatio = totalProjects ? failProjects / totalProjects : 0;
@@ -664,8 +697,8 @@ const init = async () => {
     </div>
     <div class="badge">${totalProjects} total</div>
   </div>
-  <svg class="donut-chart" viewBox="0 0 180 160" role="img" aria-label="Projects pass and fail donut chart">
-    <g transform="translate(90 80) rotate(-90)">
+  <svg class="donut-chart" viewBox="0 0 ${donutWidth} ${donutHeight}" role="img" aria-label="Projects pass and fail donut chart">
+    <g transform="translate(${donutCenterX} ${donutCenterY}) rotate(${donutRotation})">
       <circle class="donut-track" r="${radius}" cx="0" cy="0"></circle>
       <circle class="donut-pass" r="${radius}" cx="0" cy="0"
         stroke-dasharray="${passLength} ${circumference - passLength}"></circle>
@@ -673,8 +706,8 @@ const init = async () => {
         stroke-dasharray="${failLength} ${circumference - failLength}"
         stroke-dashoffset="-${passLength}"></circle>
     </g>
-    <text class="donut-total" x="90" y="78">${totalProjects}</text>
-    <text class="donut-sub" x="90" y="98">projects</text>
+    <text class="donut-total" x="${donutCenterX}" y="${donutCenterY + donutTotalOffsetY}">${totalProjects}</text>
+    <text class="donut-sub" x="${donutCenterX}" y="${donutCenterY + donutSubOffsetY}">projects</text>
   </svg>
   <div class="chart-legend">
     <span class="legend-item"><span class="legend-swatch pass"></span>${passProjects} passed</span>
@@ -685,15 +718,26 @@ const init = async () => {
 
     if (auditChartEl) {
       const totalAudit = done + receive;
-      const availableWidth = auditChartEl.clientWidth - 120;
-      const barMax = Math.max(200, Math.min(360, availableWidth || 0)) || 220;
+      const containerPadding = readCssNumber("--flow-container-padding", 120);
+      const barMin = readCssNumber("--flow-bar-min", 200);
+      const barMaxLimit = readCssNumber("--flow-bar-max", 360);
+      const barDefault = readCssNumber("--flow-bar-default", 220);
+      const labelWidth = readCssNumber("--flow-label-width", 70);
+      const rightPad = readCssNumber("--flow-right-pad", 50);
+      const chartHeight = readCssNumber("--flow-chart-height", 90);
+      const barHeight = readCssNumber("--flow-bar-height", 14);
+      const doneY = readCssNumber("--flow-done-y", 14);
+      const receiveY = readCssNumber("--flow-receive-y", 50);
+      const barRadius = readCssNumber("--flow-bar-radius", 7);
+      const textOffsetY = readCssNumber("--flow-text-offset-y", 2);
+      const valueOffsetX = readCssNumber("--flow-value-offset-x", 8);
+      const availableWidth = auditChartEl.clientWidth - containerPadding;
+      const barMax =
+        Math.max(barMin, Math.min(barMaxLimit, availableWidth || 0)) ||
+        barDefault;
       const doneWidth = totalAudit ? (done / totalAudit) * barMax : 0;
       const receiveWidth = totalAudit ? (receive / totalAudit) * barMax : 0;
-      const chartWidth = 70 + barMax + 50;
-      const chartHeight = 90;
-      const barHeight = 14;
-      const doneY = 14;
-      const receiveY = 50;
+      const chartWidth = labelWidth + barMax + rightPad;
 
       auditChartEl.innerHTML = `
   <div class="card-header">
@@ -704,17 +748,17 @@ const init = async () => {
     <div class="badge">${ratioValue}</div>
   </div>
   <svg class="flow-chart" viewBox="0 0 ${chartWidth} ${chartHeight}" role="img" aria-label="Audit flow bar chart">
-    <text class="flow-label" x="0" y="${doneY + barHeight - 2}">Done</text>
-    <rect class="flow-track" x="70" y="${doneY}" width="${barMax}" height="${barHeight}" rx="7"></rect>
-    <rect class="flow-done" x="70" y="${doneY}" width="${doneWidth}" height="${barHeight}" rx="7"></rect>
-    <text class="flow-value" x="${70 + barMax + 8}" y="${
-        doneY + barHeight - 2
+    <text class="flow-label" x="0" y="${doneY + barHeight - textOffsetY}">Done</text>
+    <rect class="flow-track" x="${labelWidth}" y="${doneY}" width="${barMax}" height="${barHeight}" rx="${barRadius}"></rect>
+    <rect class="flow-done" x="${labelWidth}" y="${doneY}" width="${doneWidth}" height="${barHeight}" rx="${barRadius}"></rect>
+    <text class="flow-value" x="${labelWidth + barMax + valueOffsetX}" y="${
+        doneY + barHeight - textOffsetY
       }">${doneMB}</text>
-    <text class="flow-label" x="0" y="${receiveY + barHeight - 2}">Received</text>
-    <rect class="flow-track" x="70" y="${receiveY}" width="${barMax}" height="${barHeight}" rx="7"></rect>
-    <rect class="flow-receive" x="70" y="${receiveY}" width="${receiveWidth}" height="${barHeight}" rx="7"></rect>
-    <text class="flow-value" x="${70 + barMax + 8}" y="${
-        receiveY + barHeight - 2
+    <text class="flow-label" x="0" y="${receiveY + barHeight - textOffsetY}">Received</text>
+    <rect class="flow-track" x="${labelWidth}" y="${receiveY}" width="${barMax}" height="${barHeight}" rx="${barRadius}"></rect>
+    <rect class="flow-receive" x="${labelWidth}" y="${receiveY}" width="${receiveWidth}" height="${barHeight}" rx="${barRadius}"></rect>
+    <text class="flow-value" x="${labelWidth + barMax + valueOffsetX}" y="${
+        receiveY + barHeight - textOffsetY
       }">${receiveMB}</text>
   </svg>
 `;
