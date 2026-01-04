@@ -23,6 +23,7 @@
 
   --font-sans: "Space Grotesk", "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", "SFMono-Regular", monospace;
+  --dashboard-width: 960px;
 }
 
 /* ===============================
@@ -242,7 +243,7 @@ button:hover {
 }
 
 .dashboard {
-  max-width: 960px;
+  width: min(100%, var(--dashboard-width));
   margin: 40px auto 40px clamp(20px, 6vw, 80px);
   padding: 0 20px;
   display: grid;
@@ -444,10 +445,25 @@ button:hover {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 28px;
+  width: 100%;
 }
 
 .xp-skill-row .card {
   min-height: 520px;
+}
+
+#xp-chart {
+  /* align-items: flex-start; */
+  right: 0%;
+  width: 206%;
+  height: 100%;
+}
+
+#skills-radar {
+  /* align-items: flex-end; */
+  left: 110%;
+  width: 180%;
+  height: 100%;
 }
 
 @media (max-width: 900px) {
@@ -458,7 +474,7 @@ button:hover {
 
 .skills-radar .radar-plot {
   width: 100%;
-  height: auto;
+  height: 75%;
   display: block;
 }
 
