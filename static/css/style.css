@@ -209,7 +209,7 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 40px;
+  padding: 24px clamp(20px, 6vw, 80px);
   background: rgba(8, 14, 27, 0.9);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--card-border);
@@ -364,7 +364,7 @@ button:hover {
   /* z-index: 2; */
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1800px) {
   #mainPage .dashboard-charts {
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   }
@@ -858,7 +858,7 @@ svg:hover polyline {
    RESPONSIVE LAYOUT
 ================================ */
 
-@media (max-width: 1200px) {
+@media (max-width: 1800px) {
   .dashboard {
     width: 100%;
     margin: 32px auto;
@@ -870,9 +870,13 @@ svg:hover polyline {
   }
 
   .dashboard-charts {
+    width: 100%;
+    /* display: flex;
+    justify-content: space-around; */
     position: static;
     left: auto;
     top: auto;
+    right: auto;
   }
 
   #mainPage .dashboard-charts .audit-chart {
@@ -881,11 +885,18 @@ svg:hover polyline {
 
   #mainPage .dashboard-charts .skills-chart {
     width: 100%;
+    margin-left: 50%;
+    margin-right: 50%;
   }
 
   #mainPage .dashboard-charts .project-chart {
     width: 100%;
-    left: auto;
+    /* margin-right: 10%;
+    margin-left: 10%; */
+    margin-left: 30%;
+
+    /* left: 160%; */
+    /* height: auto; */
   }
 
   #xp-chart,
@@ -901,7 +912,7 @@ svg:hover polyline {
   .topbar {
     flex-wrap: wrap;
     gap: 16px;
-    padding: 18px 20px;
+    padding: 18px clamp(16px, 4vw, 20px);
   }
 
   .user-actions {
@@ -911,7 +922,7 @@ svg:hover polyline {
   }
 
   .dashboard {
-    margin: 40px auto 24px;
+    margin: 60px auto 24px;
     padding: 0 16px;
   }
 
