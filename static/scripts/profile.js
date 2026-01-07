@@ -162,6 +162,12 @@ const init = async () => {
       const chartEntries = Object.entries(skill || {}).sort(
         ([, countA], [, countB]) => countB - countA
       );
+      // Toggle scrollable class when there are more than 16 skills
+      if (chartEntries.length > 16) {
+        skillsChartEl.classList.add("scrollable");
+      } else {
+        skillsChartEl.classList.remove("scrollable");
+      }
       if (!chartEntries.length) {
         skillsChartEl.innerHTML = `
   <div class="card-header">

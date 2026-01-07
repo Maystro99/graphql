@@ -224,9 +224,16 @@ body::after {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
 }
 
 /* ===============================
@@ -272,7 +279,7 @@ button:disabled {
   .centered {
     padding: 16px;
   }
-  
+
   .auth-card {
     padding: 24px;
     border-radius: 14px;
@@ -555,6 +562,13 @@ button:disabled {
   width: 100%;
   height: auto;
   display: block;
+}
+
+/* Ensure skills chart becomes scrollable when it overflows */
+.skills-chart.scrollable {
+  max-height: 320px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .skills-chart .bar-track {
