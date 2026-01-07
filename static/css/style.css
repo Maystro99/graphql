@@ -89,6 +89,25 @@
     transform 0.25s ease, box-shadow 0.25s ease;
 }
 
+/* Custom scrollbar for the entire page */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 5px;
+  box-shadow: 0 0 8px rgba(61, 214, 208, 0.4);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(61, 214, 208, 0.8);
+}
+
 html,
 body {
   min-height: 100vh;
@@ -569,6 +588,26 @@ button:disabled {
   max-height: 456px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Custom scrollbar for skills chart */
+.skills-chart.scrollable::-webkit-scrollbar {
+  width: 8px;
+}
+
+.skills-chart.scrollable::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.skills-chart.scrollable::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+  box-shadow: 0 0 6px rgba(61, 214, 208, 0.4);
+}
+
+.skills-chart.scrollable::-webkit-scrollbar-thumb:hover {
+  background: rgba(61, 214, 208, 0.8);
 }
 
 .skills-chart .bar-track {

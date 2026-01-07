@@ -163,7 +163,7 @@ const init = async () => {
         ([, countA], [, countB]) => countB - countA
       );
 
-      if (chartEntries.length > 16) {
+      if (chartEntries.length > 15) {
         skillsChartEl.classList.add("scrollable");
       } else {
         skillsChartEl.classList.remove("scrollable");
