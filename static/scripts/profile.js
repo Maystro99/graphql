@@ -159,6 +159,22 @@ const init = async () => {
     }
 
     if (skillsChartEl) {
+      // skill.myAnaaaaaaaaa = 5;
+      // skill.mybbbbbbbbbbbbbbbbbbbb = 5;
+      // skill.myAnaaaaaaaaa = 5;
+      // skill.mybbbbbbbbbbbbbbbbbbbb = 5;
+      // skill.myAnaaaaaaqqaaa = 5;
+      // skill.mybbbbbbbbbqqbbbbbbbbbbb = 5;
+      // skill.myAnaaaaaaabfdveaa = 5;
+      // skill.mybbbbbbbbbdvsdebbbbbbbbbbb = 5;
+      // skill.myAnaaaaaaafbeedaa = 5;
+      // skill.mybbbbbbbbbdfwdbbbbbbbbbbb = 5;
+      // skill.myAnaaaaaafbfbweefaaa = 5;
+      // skill.mybbbbbbbbasasabbbbbbbbbbbb = 5;
+      // skill.myAnaaaaaabwbwbaaa = 5;
+      // skill.mybbbbbbbbcwcwbbbbbbbbbbbb = 5;
+      // skill.myAnaaaaabdedaaaa = 5;
+      // skill.mybbbbbbbevwdwfbbbbbbbbbbbbb = 5;
       const chartEntries = Object.entries(skill || {}).sort(
         ([, countA], [, countB]) => countB - countA
       );
@@ -168,7 +184,7 @@ const init = async () => {
       } else {
         skillsChartEl.classList.remove("scrollable");
       }
-      
+
       if (!chartEntries.length) {
         skillsChartEl.innerHTML = `
   <div class="card-header">
@@ -191,7 +207,7 @@ const init = async () => {
         const chartRightPad = readCssNumber("--skills-chart-right-pad", 40);
         const textOffsetY = readCssNumber("--skills-text-offset-y", 2);
         const countOffsetX = readCssNumber("--skills-count-offset-x", 8);
-        const maxVisibleSkills = 16;
+        const maxVisibleSkills = chartEntries.length;
         const chartHeight =
           maxVisibleSkills * (barHeight + barGap) + chartPadding * 2;
         const chartWidth = labelWidth + barMaxWidth + chartRightPad;
