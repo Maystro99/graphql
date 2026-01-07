@@ -162,7 +162,7 @@ const init = async () => {
       const chartEntries = Object.entries(skill || {}).sort(
         ([, countA], [, countB]) => countB - countA
       );
-      // Toggle scrollable class when there are more than 16 skills
+
       if (chartEntries.length > 16) {
         skillsChartEl.classList.add("scrollable");
       } else {
@@ -190,8 +190,9 @@ const init = async () => {
         const chartRightPad = readCssNumber("--skills-chart-right-pad", 40);
         const textOffsetY = readCssNumber("--skills-text-offset-y", 2);
         const countOffsetX = readCssNumber("--skills-count-offset-x", 8);
+        const maxVisibleSkills = 16;
         const chartHeight =
-          chartEntries.length * (barHeight + barGap) + chartPadding * 2;
+          maxVisibleSkills * (barHeight + barGap) + chartPadding * 2;
         const chartWidth = labelWidth + barMaxWidth + chartRightPad;
         const bars = chartEntries
           .map(([name, count], index) => {

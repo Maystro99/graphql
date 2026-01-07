@@ -566,7 +566,7 @@ button:disabled {
 
 /* Ensure skills chart becomes scrollable when it overflows */
 .skills-chart.scrollable {
-  max-height: 320px;
+  max-height: 456px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
