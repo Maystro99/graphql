@@ -168,6 +168,7 @@ const init = async () => {
       } else {
         skillsChartEl.classList.remove("scrollable");
       }
+      
       if (!chartEntries.length) {
         skillsChartEl.innerHTML = `
   <div class="card-header">
